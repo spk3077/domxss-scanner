@@ -15,14 +15,15 @@ export class MainComponent {
 
   // Upon input in searchtext input should add content unsafely to DOM
   public updateFilterText() {
-    if (this.filterSearch in this.searchables) {
+    console.log(this.filterSearch)
+    if (this.filterSearch !== undefined && this.searchables.indexOf(this.filterSearch) > -1) {
       this.present = true;
+      const domElement = this.filterResult.nativeElement;
+      const fragment = document.createRange().createContextualFragment(this.filterSearch);
+      domElement.appendChild(fragment);
     }
     else {
       this.present = false;
     }
-    const domElement = this.filterResult.nativeElement;
-    const fragment = document.createRange().createContextualFragment(this.filterSearch);
-    domElement.appendChild(fragment);
   }
 }
