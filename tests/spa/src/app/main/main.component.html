@@ -1,1 +1,9 @@
-<p>main works!</p>
+<main>
+    <label class="form-control" for="search">Search a name</label>
+    <input id="search" class="form-control" type="text" placeholder="Search" (ngModelChange)="updateFilterText()" [(ngModel)]="filterSearch">
+    <h5 *ngIf="present">
+        The name <b #searchText id="searchText" [innerHtml]="filterSearch | safe: 'html'"></b>
+        <span *ngIf="present == true"> is present</span>
+        <span *ngIf="!present == false"> is not present</span>
+    </h5>
+</main>
