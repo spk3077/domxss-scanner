@@ -4,12 +4,12 @@
 version: "3.7"
 
 services:
-  conv_app:
-    build:
-      context: ./
-      dockerfile: ./docker/Dockerfile_conv
-    ports:
-      - 80:80
+  # conv_app:
+  #   build:
+  #     context: ./
+  #     dockerfile: ./docker/Dockerfile_conv
+  #   ports:
+  #     - 80:80
   node_app:
     build:
       context: ./
