@@ -15,7 +15,6 @@ export class MainComponent {
 
   // Upon input in searchtext input should add content unsafely to DOM
   public updateFilterText() {
-    console.log(this.filterSearch)
     if (this.filterSearch !== undefined && this.searchables.indexOf(this.filterSearch) > -1) {
       this.present = true;
       const domElement = this.filterResult.nativeElement;

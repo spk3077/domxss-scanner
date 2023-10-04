@@ -4,15 +4,16 @@
 version: "3.7"
 
 services:
-  # conv_app:
-  #   build:
-  #     context: ./
-  #     dockerfile: ./docker/Dockerfile_conv
-  #   ports:
-  #     - 80:80
-  node_app:
+  conv_app:
     build:
       context: ./
-      dockerfile: ./docker/Dockerfile_spa
+      dockerfile: ./docker/Dockerfile_conv
+    restart: always
     ports:
-      - 4200:4200
+      - 80:80
+  # node_app:
+  #   build:
+  #     context: ./
+  #     dockerfile: ./docker/Dockerfile_spa
+  #   ports:
+  #     - 4200:4200

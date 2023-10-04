@@ -1,0 +1,10 @@
+FROM httpd:latest
+WORKDIR /usr/local/apache2/
+
+RUN apt-get update \
+    && apt-get install -y vim
+
+COPY ["conventional/public/", "htdocs/."]
+COPY ["conventional/httpd.conf", "conf/httpd.conf"]
+
+EXPOSE 80/tcp

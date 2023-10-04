@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>EXT1</title>
+        <script>
+            function printName() {
+                let first = document.getElementById("first").value;
+                document.getElementById("print_name").innerHTML = first;
+            }
+        </script>
+    </head>
+    <body>
+        <p> You are ... <span id="print_name"> </span> </p>
+        <form action="javascript:printName();">
+         <input type="text" id="first" name="first"/>
+         <input type="submit" value="Submit First Name"/>
+        </form>
+        <a href="http://localhost/" style="right: 0; position: absolute; margin-right: 100px;">Go Back</a>
+    </body>
+</html>
