@@ -41,13 +41,19 @@ python3 scanner.py SITE
 
 
 ### The Tests
-    
+Pictures of Exploitation for each test
+
 EX1:
+![Alt text](images/ex1.png?raw=true "EX1")
 
 EX2:
+![Alt text](images/ex2.png?raw=true "EX2")
 
 EX3:
+![Alt text](images/ex3.png?raw=true "EX3")
 
 EX4:
+![Alt text](images/ex4.png?raw=true "EX4")
 
 EX5:
+![Alt text](images/ex5.png?raw=true "EX5")

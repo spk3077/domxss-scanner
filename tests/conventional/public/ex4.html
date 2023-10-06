@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>EXT4</title>
+        <script>
+            function printVar(boolean, secret) {
+                if (boolean == "Yes") {
+                    document.write('<div> Hello, I heard you wanted to print</div><form><input type="text" name=' + 
+                        secret + ' placeholder="Not Available"/><input type="submit value="Print This"/></form>');
+                }
+                else {
+                    return;
+                }
+            } 
+        </script>
+    </head>
+    <body>
+        <h4>Do you want to Print?</h4>
+        <form id="form1" action="javascript:printVar(document.getElementById('boolean').value, document.getElementById('secret').value);">
+         <input type="text" id="boolean" name="var" placeholder="Yes/No"/>
+         <input type="hidden" id="secret" name="var" value="second"/> 
+         <input type="submit" value="Print"/>
+        </form>
+        <a href="http://localhost/" style="right: 0; position: absolute; margin-right: 100px;">Go Back</a>
+    </body>
+</html>
