@@ -11,8 +11,15 @@ import sys
 import re
 import time
 
+from vulnerability import Vulnerability
+from payloads import PAYLOADS
+
 from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 def check_input():
     """
@@ -61,40 +68,77 @@ def get_drivers() -> set:
 
     return drivers
 
+def has_alert(driver) -> bool:
+    """
+    has_alert detects if an alert is present on the webpage
 
-def scan_page(driver, url: str) -> dict:
+    :param driver: browser object
+    :return: boolean True if alert present, False if alert missing
+    """
+    try:
+        WebDriverWait(driver, 2.5).until(EC.alert_is_present())
+        return True
+        
+    except TimeoutException:
+        return False
+
+
+def scan_page(driver, url: str) -> set:
     """
     scan_page scans the specified URL using the specified driver (browser) for DOM XSS (main func)
 
-    :param driver: IP of Web Server
-    :param port: Port of Web Server
-    :return: dictionary of scan results
+    :param driver: browser object
+    :param url: Target URL to assess
+    :return: set of scan results
     """
-    # Detect inputs and manipulate them if detected
+    results: set = set()
     driver.get(url)
-    input_elements: list = driver.find_elements(By.TAG_NAME, "input")
-    print(input_elements)
+
+    # Check if Alert is already present
+    if has_alert(driver):
+        print("Alert already present on assessed site")
+        return
+        
+    # Detect inputs and manipulate them if detected
+    ## Inputs inside form
+    for form in driver.find_elements(By.TAG_NAME, "form"):
+        for input in form.find_elements(By.TAG_NAME, "input"):
+            for payload in PAYLOADS:
+                input.send_keys(payload + Keys.RETURN)
+        
+        form.submit()
+        if has_alert():
+            results.add(Vulnerability("INPUT/FORM", form.current_url, form))
+
+        # If we get redirected return to original site
+        if form.current_url != url:
+            driver.get(url)
+
+
+
+    ## Inputs outside form
 
 
     # Scan for Sources and manipulate them if detected
 
-    # webdriver.Chrome().find_elements
+    dog = webdriver.Chrome()
+    dog.find_element(By.TAG_NAME, "form").tag_name
+    dog.find_element(By.TAG_NAME, "form").get_attribute("id")
+    dog.current_url
+
     
 
     # execute_script
 
-def print_output(driver_name: str, results: dict):
+
+def print_output(results: set):
     """
     print_output takes in the driver name and results to print good looking results to STDOUT
 
     :param driver_name: name of driver
     :param port: Port of Web Server
-    :return: dictionary of scan results
+    :return: set of scan results
     """
-    print()
-    print("================================")
-    print("**" + driver_name.upper() + ":")
-    print()
     print(results)
 
 
@@ -110,8 +154,12 @@ def main():
 
     url: str = sys.argv[1]
     for driver in drivers:
-        results: dict = scan_page(driver, url)
-        print_output(driver.name, results)
+        print()
+        print("================================")
+        print("**" + driver.name.upper() + ":")
+        results: set = scan_page(driver, url)
+        print_output(results)
+
         # Closing...
         driver.stop_client()
         driver.close()
@@ -120,6 +168,7 @@ def main():
     end_time = time.time()
     print()
     print("================================")
+    print()
     print("Finished successfully at %s!" % (str(end_time - start_time)),)
     
 
