@@ -8,7 +8,6 @@ Running: python3 scanner.py <WEBSITE>
 Example Run: python3 scanner.py http://www.rit.edu/
 """
 import sys
-import re
 import time
 
 from vulnerability import Vulnerability
@@ -101,30 +100,39 @@ def scan_page(driver, url: str) -> set:
         
     # Detect inputs and manipulate them if detected
     ## Inputs inside form
+    found_inputs: set = set()
     for form in driver.find_elements(By.TAG_NAME, "form"):
+        # FUTURE WORK: SUPPORT MORE INPUT TYPES, FORM-RELATED TAGS
         for input in form.find_elements(By.TAG_NAME, "input"):
             for payload in PAYLOADS:
                 input.send_keys(payload + Keys.RETURN)
+                found_inputs.add(input)
         
         form.submit()
         if has_alert():
-            results.add(Vulnerability("INPUT/FORM", form.current_url, form))
+            results.add(Vulnerability("FORM", form.current_url, form))
 
         # If we get redirected return to original site
         if form.current_url != url:
             driver.get(url)
 
-
-
     ## Inputs outside form
+    input_elements: list = form.find_elements(By.TAG_NAME, "input")
+    for input_element in input_elements:
+        if input_element not in found_inputs:
+            for payload in PAYLOADS:
+                input_element.send_keys(payload + Keys.RETURN)
+        
+                if has_alert():
+                    results.add(Vulnerability("INPUT", input_element.current_url, input_element))
+
+                # If we get redirected return to original site
+                if input_element.current_url != url:
+                    driver.get(url)
 
 
     # Scan for Sources and manipulate them if detected
 
-    dog = webdriver.Chrome()
-    dog.find_element(By.TAG_NAME, "form").tag_name
-    dog.find_element(By.TAG_NAME, "form").get_attribute("id")
-    dog.current_url
 
     
 
@@ -139,7 +147,9 @@ def print_output(results: set):
     :param port: Port of Web Server
     :return: set of scan results
     """
-    print(results)
+    for result in results:
+        print("-------")
+        print(result)
 
 
 def main():
