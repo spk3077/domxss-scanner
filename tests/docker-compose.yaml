@@ -11,9 +11,9 @@ services:
     restart: always
     ports:
       - 80:80
-  # node_app:
-  #   build:
-  #     context: ./
-  #     dockerfile: ./docker/Dockerfile_spa
-  #   ports:
-  #     - 4200:4200
+  node_app:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile_spa
+    ports:
+      - 4200:4200
