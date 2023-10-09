@@ -16,10 +16,11 @@
             const url = new URLSearchParams(window.location.search); // or location.search
             const urlParam = url.get('param');
             if (urlParam != null) {
-                document.getElementById("urlParam").innerHTML = urlParam;
+                document.getElementById("urlParam").innerHTML = decodeURI(urlParam);
             }
+            console.log(decodeURI("%3Cscript%3Ealert%281%29%3C%2Fscript%3E"))
 
-            document.getElementById("urlParam").innerHTML += " || " + location.search;
+            document.getElementById("urlParam").innerHTML += " || " + decodeURI(location.search);
 
             // Cookie
             document.getElementById("cookie").innerHTML = document.cookie;

@@ -19,6 +19,7 @@ PAYLOADS: set = {
     '<img src=/ onerror=alert(1)>',
     '<img src=/ OneRroR=aLeRT(1)>',
     '%3Cimg%20src%3D%2F%20onerror%3DaLerT%281%29%3E',
+    '%3Cimg%20src%3D%2F%20onerror%3Dalert%281%29%3E',
     '&lt;img src&#x3D;&#x2F; onerror&#x3D;alert(1)&gt;',
     # "aa'><img src=/ onerror=alert(1)> <!--",
     # "aa&#39;&gt;&lt;img src=/ onerror=alert(1)&gt; &lt;!--",

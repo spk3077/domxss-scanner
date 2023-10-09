@@ -138,9 +138,25 @@ def form_input_scan(driver, url: str) -> set:
     return results
 
 
+def find_nth(string, character, n) -> int:
+    """
+    find_nth gets the nth instance of the character's index
+
+    :param string: string we are investigating
+    :param character: character we are looking for in the string
+    :param n: # instance of the character in the string
+    :return: index
+    """
+    start = string.find(character)
+    while start >= 0 and n > 1:
+        start = string.find(character, start+len(character))
+        n -= 1
+    return start
+
+
 def query_scan(driver, url: str) -> set:
     """
-    query_scan scans the specified URL using the specified driver for INPUT/FORM DOM XSS
+    query_scan scans the specified URL using the specified driver for QUERY PARAMETER DOM XSS
 
     :param driver: browser object
     :param url: Target URL to assess
@@ -149,32 +165,30 @@ def query_scan(driver, url: str) -> set:
     results: set = set()
     ## URL Parameter
     #### window.location.search | location.search
-    exploit_url: str = ""
+    exploit_url: str = url
     for payload in PAYLOADS:
-        if url.find("?") != -1: # ?
-            walked_url: str = url
-            while True:
-                equal_index: int = walked_url.find("=")
-                ampersand_index: int = walked_url.find("&")
-                fragment_index: int = walked_url.find("#")
-                if ampersand_index != -1:
-                    exploit_url = url[:equal_index + 1] + payload + url[ampersand_index:]
-                    walked_url = walked_url[ampersand_index + 1:]
-                elif fragment_index != -1:
-                    exploit_url = url[:equal_index + 1] + payload + url[fragment_index:]
-                    break
-                else:
-                    exploit_url = url[:equal_index + 1] + payload
-                    break
+        if exploit_url.find("?") != -1: # ?
+            n: int = 1
+            while find_nth(exploit_url, "=", n) != -1 and n < 6:
+                if find_nth(exploit_url, "&", n) != -1:
+                    exploit_url = exploit_url[:find_nth(exploit_url, "=", n)] + payload + exploit_url[find_nth(exploit_url, "&", n):]
 
-                driver.get(exploit_url)
-                if has_alert():
-                    results.add(Vulnerability("QUERY", exploit_url, payload))
+                elif exploit_url.find("#") != -1:
+                    exploit_url = exploit_url[:find_nth(exploit_url, "=", n)] + payload + exploit_url[exploit_url.find("#"):]
+
+                else:
+                    exploit_url = exploit_url[:find_nth(exploit_url, "=", n)] + payload
+
+                n += 1
+                
+            driver.get(exploit_url)
+            if has_alert(driver):
+                results.add(Vulnerability("QUERY", exploit_url, payload))
 
         elif url.find("#") != -1: #
             exploit_url = url[:url.find("#")] + "?exploit=" + payload + url[url.find("#"):]
             driver.get(exploit_url)
-            if has_alert():
+            if has_alert(driver):
                 results.add(Vulnerability("QUERY", exploit_url, payload))
 
         else: # Neither ? or #
@@ -182,6 +196,39 @@ def query_scan(driver, url: str) -> set:
             driver.get(exploit_url)
             if has_alert(driver):
                 results.add(Vulnerability("QUERY", exploit_url, payload))
+
+    return results
+
+
+def cookie_scan(driver, url: str) -> set:
+    """
+    cookie_scan scans the specified URL using the specified driver for COOKIE DOM XSS
+
+    :param driver: browser object
+    :param url: Target URL to assess
+    :return: set of scan results
+    """
+    results: set = set()
+    ## Cookie
+    ### Replace existing cookie values
+    driver.get(url)
+    for payload in PAYLOADS:
+        cookies: list = driver.get_cookies()
+        for cookie in cookies:
+            driver.add_cookie({'name' : cookie['name'], 'value' : payload})
+        
+        driver.get(url)
+        if has_alert(driver):
+                results.add(Vulnerability("COOKIE", url, payload))
+
+    ### Add new cookie value
+    if len(driver.get_cookies()) <= 0:
+        for payload in PAYLOADS:
+            driver.add_cookie({'name' : payload, 'value' : payload})
+            driver.get(url)
+
+            if has_alert(driver):
+                results.add(Vulnerability("COOKIE", url, payload))
 
     return results
 
@@ -202,56 +249,18 @@ def scan_page(driver, url: str) -> set:
         print("Alert already present on assessed site")
         return
         
-    # Assess Manual Possibel Sources of DOM XSS
-    results.add(form_input_scan(driver, url))
+    # Assess Manual Possible Sources of DOM XSS
+    results.update(form_input_scan(driver, url))
 
     # Assess Non-Manual Possible Sources of DOM XSS
-    results.add(query_scan(driver, url))
+    results.update(query_scan(driver, url))
 
-    ## Cookie
-    ### Replace existing cookie values
-    driver.get(url)
-    for payload in PAYLOADS:
-        cookies_dict: dict = dict()
-        for cookie in driver.get_cookies():
-            cookies_dict['name'] = cookie['name']
-            cookies_dict['value'] = payload
-        
-        driver.add_cookie(cookies_dict)
-        driver.get(url)
-
-        if has_alert(driver):
-                results.add(Vulnerability("COOKIE", url, payload))
-
-    ### Add new cookie value
+    if driver.name.upper() == "FIREFOX":
+        results.update(cookie_scan(driver,url))
     
-    
-    # webdriver.Chrome().add_cookie(cookies_dict)
-    # driver.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/', 'secure' : True})
+    # Fragment
 
-
-
-    # ll_cookies=self.driver.get_cookies();
-    # cookies_dict = {}
-    # for cookie in all_cookies:
-    #     cookies_dict[cookie['name']] = cookie['value']
-    # print(cookies_dict)
-
-    # execute_script
     return results
-
-
-def print_output(results: set):
-    """
-    print_output takes in the driver name and results to print good looking results to STDOUT
-
-    :param driver_name: name of driver
-    :param port: Port of Web Server
-    :return: set of scan results
-    """
-    for result in results:
-        print("-------")
-        print(result)
 
 
 def main():
@@ -270,7 +279,10 @@ def main():
         print("================================")
         print("**" + driver.name.upper() + ":")
         results: set = scan_page(driver, url)
-        print_output(results)
+        
+        for result in results:
+            print("-------")
+            print(result)
 
         # Closing...
         driver.stop_client()
