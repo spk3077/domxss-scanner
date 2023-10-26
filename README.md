@@ -2,7 +2,7 @@
 Selenium Python Project to Scan for DOM XSS vulnerabilities on a site.  Includes Tests!
 
 ## Prerequisites
-The script assumes you are running the web server on the latest Ubuntu version
+The script assumes you are running the web server on the latest Ubuntu version *and have access to the internet*
 Run and install the necessary dependencies below:
 
     # Clone GitHub

@@ -167,7 +167,7 @@ def query_scan(driver, url: str) -> set:
     #### window.location.search | location.search
     exploit_url: str = url
     for payload in PAYLOADS:
-        if exploit_url.find("?") != -1: # ?
+        if url.find("?") != -1: # ?
             n: int = 1
             while find_nth(exploit_url, "=", n) != -1 and n < 6:
                 if find_nth(exploit_url, "&", n) != -1:
@@ -233,6 +233,53 @@ def cookie_scan(driver, url: str) -> set:
     return results
 
 
+def fragment_scan(driver, url: str) -> set:
+    """
+    fragment_scan scans the specified URL using the specified driver for Fragment DOM XSS
+
+    :param driver: browser object
+    :param url: Target URL to assess
+    :return: set of scan results
+    """
+    results: set = set()
+    ## Fragment
+    for payload in PAYLOADS:
+        ### Append to existing fragment
+        if url.find("#") != -1:
+            exploit_url: str = url + payload
+
+        ### Add Fragment
+        else:
+            exploit_url: str = url + "#" + payload
+
+        driver.get(exploit_url)
+        if has_alert(driver):
+                results.add(Vulnerability("FRAGMENT", url, payload))
+    return results
+
+
+def referrer_scan(driver, url: str) -> set:
+    """
+    referrer_scan scans the specified URL using the specified driver for Referrer DOM XSS
+
+    :param driver: browser object
+    :param url: Target URL to assess
+    :return: set of scan results
+    """
+    results: set = set()
+    ## Referrer
+    count = 0
+    for payload in PAYLOADS:
+        driver.get("https://example.com/" + payload + "/")
+        driver.execute_script('document.write("<a id=\'domxssscan\' href=\'' + url + '\'>Click</a>");')
+        driver.find_element(By.ID, "domxssscan").click()
+        
+        count += 1
+        if has_alert(driver):
+                results.add(Vulnerability("REFERRER", url, payload))
+    return results
+
+
 def scan_page(driver, url: str) -> set:
     """
     scan_page scans the specified URL using the specified driver (browser) for DOM XSS (main func)
@@ -258,7 +305,10 @@ def scan_page(driver, url: str) -> set:
     if driver.name.upper() == "FIREFOX":
         results.update(cookie_scan(driver,url))
     
-    # Fragment
+    results.update(fragment_scan(driver, url))
+
+    # if driver.name.upper() != "FIREFOX":
+    #     results.update(referrer_scan(driver,url))    
 
     return results
 
