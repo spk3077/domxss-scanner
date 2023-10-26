@@ -114,7 +114,10 @@ def form_input_scan(driver, url: str) -> set:
         for form in driver.find_elements(By.TAG_NAME, "form"):
             # FUTURE WORK: SUPPORT MORE INPUT TYPES, FORM-RELATED TAGS
             for input in form.find_elements(By.TAG_NAME, "input"):
-                if input.get_attribute("type") != "submit":
+                if input.get_attribute("type") == "hidden":
+                    # driver.execute_script("return document.getElementById('" + input.get_attribute("id") + "').value = '" + payload + "';")
+                    pass
+                elif input.get_attribute("type") != "submit":
                     input.send_keys(payload)
     
             form.submit()
